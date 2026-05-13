@@ -1,6 +1,5 @@
 # SSH Skill - 高性能 SSH 操作技能
 
-**中文** | [English](README_EN.md)
 
 > 为 Claude Code 打造的企业级 SSH 管理工具，让远程服务器操作像本地一样简单高效
 
