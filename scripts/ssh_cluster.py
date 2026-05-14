@@ -34,7 +34,8 @@ from cluster import SSHCluster
 
 def main():
     parser = argparse.ArgumentParser(description='SSH批量操作工具 v3.0')
-    parser.add_argument('command', help='要执行的命令')
+    parser.add_argument('command', nargs='?', help='要执行的命令')
+    parser.add_argument('--command-file', help='包含命令的文件路径')
     parser.add_argument('--hosts', help='指定别名列表（逗号分隔）')
     parser.add_argument('--environment', help='按环境过滤')
     parser.add_argument('--tags', help='按标签过滤（逗号分隔）')
@@ -46,6 +47,34 @@ def main():
     args = parser.parse_args()
 
     try:
+        # 确定要执行的命令
+        if args.command_file:
+            # 从文件读取命令
+            try:
+                with open(args.command_file, 'r', encoding='utf-8') as f:
+                    command = f.read().strip()
+            except FileNotFoundError:
+                print(json.dumps({
+                    'success': False,
+                    'error': f'Command file not found: {args.command_file}'
+                }, ensure_ascii=True, indent=2), file=sys.stderr)
+                sys.exit(1)
+            except Exception as e:
+                print(json.dumps({
+                    'success': False,
+                    'error': f'Error reading command file: {e}'
+                }, ensure_ascii=True, indent=2), file=sys.stderr)
+                sys.exit(1)
+        elif args.command:
+            # 直接使用命令参数
+            command = args.command
+        else:
+            print(json.dumps({
+                'success': False,
+                'error': 'Either command argument or --command-file must be provided'
+            }, ensure_ascii=True, indent=2), file=sys.stderr)
+            sys.exit(1)
+
         # 解析参数
         aliases = args.hosts.split(',') if args.hosts else None
         tags = args.tags.split(',') if args.tags else None
@@ -67,7 +96,7 @@ def main():
 
         if args.health_check:
             health = cluster.health_check_all(
-                check_command=args.command,
+                check_command=command,
                 parallel=args.parallel,
                 timeout=args.timeout
             )
@@ -85,7 +114,7 @@ def main():
 
         else:
             results = cluster.execute_all(
-                args.command,
+                command,
                 parallel=args.parallel,
                 timeout=args.timeout
             )
