@@ -191,7 +191,7 @@ def main():
 
         has_key = params.get('key_file') is not None
         has_password = params.get('password') is not None
-        use_daemon = has_password and not args.no_daemon  # 只有密码认证才使用守护进程
+        use_daemon = not args.no_daemon  # 所有认证方式都使用守护进程
 
         if use_daemon:
             # 密码认证：尝试通过守护进程执行
